@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <!-- Import Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <style>
+        /* Custom styles for smooth transitions and rounded corners */
+        .timer-card {
+            transition: transform 0.3s ease-in-out;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .timer-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+
+    <!-- Pomodoro Timer Card -->
+    <div class="pomodoro-card timer-card shadow-lg bg-white p-6">
+        <!-- Large digital countdown display -->
+        <h2 id="timerDisplay" class="text-4xl font-bold text-center mb-8">25:00</h2>
+
+        <!-- Progress bar/circular ring -->
+        <div id="progressBar" class="w-40 h-40 mx-auto bg-gray-300 relative">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="none" stroke-width="8"></circle>
+                <path id="progressPath" d="M50 5a45 45 0 1 1 0 90A45 45 0 1 1 50 5Z" fill="transparent" stroke="#28a745" stroke-width="8"></path>
+            </svg>
+
+            <div id="progressText" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl font-bold text-center">0%</div>
+        </div>
+
+        <!-- Control buttons -->
+        <div class="flex justify-between mt-8">
+            <button id="startPauseBtn" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-full focus:outline-none">Start</button>
+            <button id="toggleModeBtn" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded-full focus:outline-none">Work Mode</button>
+            <button id="resetBtn" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded-full focus:outline-none">Reset</button>
+        </div>
+    </div>
+
+    <!-- JavaScript for the timer functionality -->
+    <script>
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const progressPath = document.getElementById('progressPath');
+        const startPauseBtn = document.getElementById('startPauseBtn');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let totalSeconds = 25 * 60; // Default work mode
+        let remainingSeconds = totalSeconds;
+        let intervalId;
+        let isPaused = false;
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgressBar() {
+            const circumference = progressPath.getTotalLength();
+            const offset = ((1 - (remainingSeconds / totalSeconds)) * circumference).toFixed(2);
+            progressPath.setAttribute('stroke-dashoffset', offset);
+            progressText.textContent = `${Math.round(((totalSeconds - remainingSeconds) / totalSeconds) * 100)}%`;
+        }
+
+        function toggleTimer() {
+            if (!isPaused) {
+                intervalId = setInterval(() => {
+                    if (remainingSeconds > 0) {
+                        remainingSeconds--;
+                        updateTimerDisplay();
+                        updateProgressBar();
+                    } else {
+                        clearInterval(intervalId);
+                        isPaused = true;
+                        alert('Time\'s up! Take a break!');
+                        toggleMode(); // Switch mode after finishing
+                    }
+                }, 1000);
+            } else {
+                clearInterval(intervalId);
+            }
+        }
+
+        function toggleMode() {
+            if (totalSeconds === 25 * 60) { // Work mode
+                totalSeconds = 5 * 60; // Switch to break mode
+                toggleModeBtn.textContent = 'Break Mode';
+            } else { // Break mode
+                totalSeconds = 25 * 60; // Switch back to work mode
+                toggleModeBtn.textContent = 'Work Mode';
+            }
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(intervalId);
+            remainingSeconds = totalSeconds;
+            updateTimerDisplay();
+            updateProgressBar();
+            isPaused = false;
+        }
+
+        startPauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            toggleTimer();
+            if (!isPaused) {
+                startPauseBtn.textContent = 'Pause';
+            } else {
+                startPauseBtn.textContent = 'Start';
+            }
+        });
+
+        toggleModeBtn.addEventListener('click', () => {
+            toggleMode();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            resetTimer();
+        });
+    </script>
+</body>
+</html>
